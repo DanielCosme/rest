@@ -8,14 +8,18 @@ import (
 func ErrResponse(rw http.ResponseWriter, code int, payload any) {
 	var p any
 
-	rwPlus := rw.(*ResponseWriterPlus)
-	switch payload.(type) {
-	case error:
-		rwPlus.Err = payload.(error)
-		p = rwPlus.Err.Error()
-	default:
+	rwPlus, ok := rw.(*ResponseWriterPlus)
+	if !ok {
 		p = payload
-		rwPlus.Err = fmt.Errorf("%v", payload)
+	} else {
+		switch payload.(type) {
+		case error:
+			rwPlus.Err = payload.(error)
+			p = rwPlus.Err.Error()
+		default:
+			p = payload
+			rwPlus.Err = fmt.Errorf("%v", payload)
+		}
 	}
 
 	JSON(rw, code, e{"error": p})
